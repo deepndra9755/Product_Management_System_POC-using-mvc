@@ -3,6 +3,7 @@ package com.example.controller;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.example.controller.Exceptions.RecordNotFoundExceptions;
@@ -30,44 +32,40 @@ import com.example.service.IProductManagement;
 import com.example.vo.ProductVoImpl;
 
 @Controller
-@RequestMapping(value = "ProductManagement")
 public class ProductImpl {
 
 	@Autowired
 	private IProductManagement service;
 
 	@GetMapping(value = "welcome")
-	public ModelAndView showHome(ModelAndView modelAndView, HttpServletRequest request) {
-	
-		return showPages(modelAndView, 1);
+	public ModelAndView showHome() {
+	return showPages("1");
 	}
 
-	@GetMapping(value = "/PAGE/{page}")
-	public ModelAndView showPages(ModelAndView modelAndView, @PathVariable("page") Integer value) {
+	@GetMapping(value = "/page/{pageNum}")
+	public ModelAndView showPages(@PathVariable(name = "pageNum") String pageNum) {
+		ModelAndView modelAndView = new ModelAndView();
 		Pageable pageable = null;
-         System.out.println(">>>>>>>>>>>>>>>>>>M<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"+value);
+		int value = Integer.parseInt(pageNum);
 		pageable = PageRequest.of(value - 1, 10, Sort.by(Order.asc("name")));
-		List<ProductVoImpl> retriveList =Mapper.toGetProductVoList(service.findAllRecords(pageable));
-		
-		modelAndView.addObject("currentPage", value);
+		List<ProductVoImpl> retriveList = Mapper.toGetProductVoList(service.findAllRecords(pageable));
+		modelAndView.addObject("currentPage", pageNum);
 		modelAndView.addObject("values", retriveList);
 		modelAndView.addObject("totalRecord", service.getAllRecodsCount(pageable));
 		modelAndView.addObject("totalPages", service.getTotalPages(pageable));
 		modelAndView.setViewName("Home");
-
 		return modelAndView;
 	}
 
 	@GetMapping(value = "add")
 	public ModelAndView addMore(@ModelAttribute("form") ProductVoImpl product, HttpServletRequest request,
-			ModelAndView formData, @RequestParam(required = false, defaultValue = "0") Integer id) throws Exception {
-
-		ProductDtoImpl dtoImpl = Mapper.toGetProductDtoImpl(product);
+			ModelAndView formData, @RequestParam(name = "id", required = false) String pid)
+			throws RecordNotFoundExceptions, Exception {
+		Integer id = Integer.parseInt(pid);
 		if (id != 0 && id != null) {
 			ProductDtoImpl proDtoImpl = service.findByID(id);
 			proDtoImpl.setId(id);
-			ProductVoImpl voImpl=new ProductVoImpl();
-			BeanUtils.copyProperties(proDtoImpl, voImpl);
+			ProductVoImpl voImpl = Mapper.toGetProductVo(proDtoImpl);
 			formData.setViewName("AddItem");
 			formData.addObject("form", voImpl);
 			return formData;
@@ -80,24 +78,28 @@ public class ProductImpl {
 	@PostMapping(value = "add")
 	public String showingForm(@ModelAttribute("form") ProductVoImpl product, HttpServletRequest request)
 			throws Exception {
-		ProductDtoImpl dtoImpl=Mapper.toGetProductDtoImpl(product);
+		ProductDtoImpl dtoImpl = Mapper.toGetProductDtoImpl(product);
+		dtoImpl.setId(product.getId());
 		service.insertProduct(dtoImpl);
 		return "redirect:welcome";
 	}
 
 	@GetMapping(value = "deletet")
-	public String delete(HttpServletRequest request) throws NumberFormatException, Exception {
-		service.deleteRecord(Integer.parseInt(request.getParameter("id")));
+	public String delete(HttpServletRequest request, @RequestParam(required = false) String id)
+			throws  RecordNotFoundExceptions,Exception {
+		service.deleteRecord(Integer.parseInt(id));
 		return "redirect:welcome";
 	}
 
-	@PostMapping(value = "/search")
-	@ExceptionHandler(RecordNotFoundExceptions.class)
-	public ModelAndView findProducts(ModelAndView modelAndView, HttpServletRequest request)
-			throws RecordNotFoundExceptions {
+	@PostMapping(value = "search")
+	public ModelAndView findProducts(ModelAndView modelAndView, HttpServletRequest request) throws RecordNotFoundExceptions,Exception {
+		String productName = request.getParameter("pname");
+		Float price = Float.parseFloat(request.getParameter("price"));
+		Float to = Float.parseFloat(request.getParameter("to"));
 
-		List<ProductDtoImpl> list = service.findElementsByCategory(request.getParameter("search"));
-		modelAndView.addObject("category", list);
+		List<ProductDtoImpl> list = service.findProduct(productName, price, to);
+		List<ProductVoImpl> voImpls = Mapper.toGetProductVoList(list);
+		modelAndView.addObject("category", voImpls);
 		modelAndView.setViewName("SearchItem");
 		return modelAndView;
 	}

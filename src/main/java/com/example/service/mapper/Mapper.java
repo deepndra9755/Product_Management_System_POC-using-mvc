@@ -9,7 +9,7 @@ import com.example.dto.ProductDtoImpl;
 public class Mapper {
 
 	public static Product toGetProduct(ProductDtoImpl dtoImpl) {
-		return new Product(dtoImpl.getId(), dtoImpl.getName(), dtoImpl.getPrice(), dtoImpl.getCategory());
+		return new Product(dtoImpl.getId(), dtoImpl.getName().toUpperCase(), dtoImpl.getPrice(), dtoImpl.getCategory().toUpperCase());
 	}
 
 	public static ProductDtoImpl toGetProductDtoImpl(Product product) {

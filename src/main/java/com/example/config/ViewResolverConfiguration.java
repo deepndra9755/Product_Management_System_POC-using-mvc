@@ -31,7 +31,7 @@ public class ViewResolverConfiguration{
 
 	@Bean
 	public FilterRegistrationBean<Filter> disableSpringBootErrorFilter(ErrorPageFilter filter) {
-	    FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+	    FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<Filter>();
 	    filterRegistrationBean.setFilter(filter);
 	    filterRegistrationBean.setEnabled(false);
 

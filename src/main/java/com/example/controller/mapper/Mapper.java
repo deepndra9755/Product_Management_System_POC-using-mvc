@@ -16,6 +16,8 @@ public class Mapper {
 	public static ProductDtoImpl toGetProductDtoImpl(ProductVoImpl product) {
 		return new ProductDtoImpl(product.getName(), product.getPrice(), product.getCategory());
 	}
+	
+	
 
 	public static List<ProductVoImpl> toGetProductVoList(List<ProductDtoImpl> list) {
 		return list.stream()

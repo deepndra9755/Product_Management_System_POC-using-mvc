@@ -1,18 +1,19 @@
-package com.example.controller.Exceptions;
+package com.example.service.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Given Id Base Record Is Not There")
+@ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Record Not Found")
 public class RecordNotFoundExceptions extends RuntimeException {
-    String msg;
+	String msg;
+
 	public RecordNotFoundExceptions() {
 		super();
 	}
+
 	public RecordNotFoundExceptions(String msg) {
-		super();
+		super(msg);
 		this.msg=msg;
 	}
-	
 
 }
